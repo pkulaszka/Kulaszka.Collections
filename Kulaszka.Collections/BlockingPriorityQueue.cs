@@ -96,13 +96,18 @@ namespace Kulaszka.Collections
             Enqueue(element, priority);
         }
 
-        public async Task EnqueueAsync(TElement element, TPriority priority, CancellationToken cancellationToken = default)
+        public async Task EnqueueAsync(TElement element, TPriority priority, int millisecondsTimeout, CancellationToken cancellationToken = default)
         {
             ValidateBeforeEnqueue(element, priority);
 
-            await _allowEnqueue.WaitOneAsync(cancellationToken).ConfigureAwait(false);
+            var canEnqueue = await _allowEnqueue.WaitOneAsync(millisecondsTimeout, cancellationToken); ;
 
             cancellationToken.ThrowIfCancellationRequested();
+
+            if (!canEnqueue)
+            {
+                throw new TimeoutException();
+            }
 
             if (IsAddingCompleted)
             {
@@ -110,6 +115,16 @@ namespace Kulaszka.Collections
             }
 
             Enqueue(element, priority);
+        }
+
+        public async Task EnqueueAsync(TElement element, TPriority priority, TimeSpan timeout, CancellationToken cancellationToken = default)
+        {
+            await EnqueueAsync(element, priority, (int)timeout.TotalMilliseconds, cancellationToken);
+        }
+
+        public async Task EnqueueAsync(TElement element, TPriority priority, CancellationToken cancellationToken = default)
+        {
+            await EnqueueAsync(element, priority, Timeout.Infinite, cancellationToken);
         }
 
         private void ValidateBeforeEnqueue(TElement element, TPriority priority)
@@ -150,11 +165,17 @@ namespace Kulaszka.Collections
             UpdateCount(1);
         }
 
-        public async Task<TElement> DequeueAsync(CancellationToken cancellationToken = default)
+        public async Task<TElement> DequeueAsync(int millisecondsTimeout, CancellationToken cancellationToken = default)
         {
-            await _allowDequeue.WaitOneAsync(cancellationToken).ConfigureAwait(false);
+            var canDequeue = await _allowDequeue.WaitOneAsync(millisecondsTimeout, cancellationToken);
 
             cancellationToken.ThrowIfCancellationRequested();
+            
+            if (!canDequeue)
+            {
+                throw new TimeoutException();
+            }
+            
 
             IList<TPriority> orderedKeys;
             lock (_queues)
@@ -174,6 +195,15 @@ namespace Kulaszka.Collections
             }
 
             throw new InvalidOperationException($"Unrecognized queue state!");
+        }
+        public async Task<TElement> DequeueAsync(TimeSpan timeout, CancellationToken cancellationToken = default)
+        {
+            return await DequeueAsync((int)timeout.TotalMilliseconds, cancellationToken);
+        }
+
+        public async Task<TElement> DequeueAsync(CancellationToken cancellationToken = default)
+        {
+            return await DequeueAsync(Timeout.Infinite, cancellationToken);
         }
 
         private void UpdateCount(long value)

@@ -9,30 +9,31 @@ namespace Kulaszka.Collections
             return handle.ToTask().GetAwaiter();
         }
 
-        public static Task ToTask(this WaitHandle handle)
+        public static Task ToTask(this WaitHandle handle, int millisecondsTimeout = Timeout.Infinite)
         {
-            var tcs = new TaskCompletionSource<object>();
+            var taskCompletionSource = new TaskCompletionSource<object?>();
             var localVariableInitLock = new object();
+            
             lock (localVariableInitLock)
             {
-                RegisteredWaitHandle callbackHandle = null;
+                RegisteredWaitHandle? callbackHandle = null;
                 callbackHandle = ThreadPool.RegisterWaitForSingleObject(
                     handle,
                     (state, timedOut) =>
                     {
-                        tcs.SetResult(null);
+                        ((TaskCompletionSource<object?>)state).SetResult(null);
 
                         lock (localVariableInitLock)
                         {
                             callbackHandle.Unregister(null);
                         }
                     },
-                    state: null,
-                    millisecondsTimeOutInterval: Timeout.Infinite,
-                    executeOnlyOnce: true);
+                    taskCompletionSource,
+                    millisecondsTimeout,
+                    true);
             }
 
-            return tcs.Task;
+            return taskCompletionSource.Task;
         }
 
         public static async Task<bool> WaitOneAsync(this WaitHandle handle, int millisecondsTimeout, CancellationToken cancellationToken)
@@ -52,7 +53,7 @@ namespace Kulaszka.Collections
                     true);
                 
                 tokenRegistration = cancellationToken.Register(
-                    state => ((TaskCompletionSource<bool>)state)?.TrySetCanceled(),
+                    state => ((TaskCompletionSource<bool>)state).TrySetCanceled(),
                     taskCompletionSource);
                 
                 return await taskCompletionSource.Task;

@@ -4,10 +4,10 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>1.0.0-prelease</Version>
+    <Version>1.0.0</Version>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <Description>Provides a blocking and priority queue class with thread-safe operations in .NET 6.</Description>
-    <PackageProjectUrl></PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/pkulaszka/Kulaszka.Collections</PackageProjectUrl>
     <RepositoryUrl>https://github.com/pkulaszka/Kulaszka.Collections</RepositoryUrl>
     <PackageTags>blocking, priority, queue</PackageTags>
     <Title>Blocking and Priority Queue</Title>

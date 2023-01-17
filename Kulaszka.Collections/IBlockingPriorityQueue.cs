@@ -21,37 +21,9 @@ namespace Kulaszka.Collections
         bool IsAddingCompleted { get; }
 
         /// <summary>
-        /// Inserts a new element to the queue. If the queue is full, waits until a place in the queue becomes available.
+        /// Stop handling new items.
         /// </summary>
-        /// <param name="element">The object being added to the queue.</param>
-        /// <param name="priority">The priority assigned to the object.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Task that will be completed when the item is added to the queue.</returns>
-        /// <exception cref="QueueIsClosedException">Thrown when the queue is closed and no more items can be added.</exception>
-        /// <exception cref="ArgumentNullException">Thrown when the element or priority is null.</exception>
-        Task EnqueueAsync(TElement element, TPriority priority, CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// Inserts a new element to the queue. If the queue is full, waits until a place in the queue becomes available.
-        /// </summary>
-        /// <param name="element">The object being added to the queue.</param>
-        /// <param name="priority">The priority assigned to the object.</param>
-        /// <param name="millisecondsTimeout"></param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Task that will be completed when the item is added to the queue.</returns>
-        /// <exception cref="QueueIsClosedException">Thrown when the queue is closed and no more items can be added.</exception>
-        /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
-        /// <exception cref="ObjectDisposedException">Thrown when the queue is disposed.</exception>
-        /// <exception cref="ArgumentNullException">Thrown when the element or priority is null.</exception>
-        /// <exception cref="TimeoutException">Thrown when the operation times out.</exception>
-        Task EnqueueAsync(TElement element, TPriority priority, int millisecondsTimeout = Timeout.Infinite, CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// Takes a next element from the queue. If the queue is empty, waits until a new element is inserted to the queue.
-        /// </summary>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns></returns>
-        Task<TElement> DequeueAsync(CancellationToken cancellationToken = default);
+        void CompleteAdding();
 
         /// <summary>
         /// Inserts a new element to the queue even if the queue is full (no waits until a place in the queue becomes available).
@@ -59,8 +31,79 @@ namespace Kulaszka.Collections
         /// <param name="element">The object being added to the queue.</param>
         /// <param name="priority">The priority assigned to the object.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
+        /// <exception cref="QueueIsClosedException">Thrown when the queue is closed and no more items can be added.</exception>
         void ForceEnqueue(TElement element, TPriority priority, CancellationToken cancellationToken = default);
 
-        void CompleteAdding();
+        /// <summary>
+        /// Inserts a new element to the queue. If the queue is full, waits until a place in the queue becomes available or a cancellation signal is received or timeout occurs.
+        /// </summary>
+        /// <param name="element">The object being added to the queue.</param>
+        /// <param name="priority">The priority assigned to the object.</param>
+        /// <param name="millisecondsTimeout">The time after which waiting for place in the queue will end by throwing an TimeoutException exception.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>Task that will be completed when the item is added to the queue.</returns>
+        /// <exception cref="QueueIsClosedException">Thrown when the queue is closed and no more items can be added.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the element or priority is null.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the cancellation token is canceled.</exception>
+        /// <exception cref="TimeoutException">Thrown when the timeout expires.</exception>
+        Task EnqueueAsync(TElement element, TPriority priority, int millisecondsTimeout, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Inserts a new element to the queue. If the queue is full, waits until a place in the queue becomes available or a cancellation signal is received or timeout occurs.
+        /// </summary>
+        /// <param name="element">The object being added to the queue.</param>
+        /// <param name="priority">The priority assigned to the object.</param>
+        /// <param name="timeout">The time after which waiting for the place in the queue will end by throwing an TimeoutException exception.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>Task that will be completed when the item is added to the queue.</returns>
+        /// <exception cref="QueueIsClosedException">Thrown when the queue is closed and no more items can be added.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the element or priority is null.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the cancellation token is canceled.</exception>
+        /// <exception cref="TimeoutException">Thrown when the timeout expires.</exception>
+        Task EnqueueAsync(TElement element, TPriority priority, TimeSpan timeout, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Inserts a new element to the queue. If the queue is full, waits until a place in the queue becomes available or a cancellation signal is received.
+        /// </summary>
+        /// <param name="element">The object being added to the queue.</param>
+        /// <param name="priority">The priority assigned to the object.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>Task that will be completed when the item is added to the queue.</returns>
+        /// <exception cref="QueueIsClosedException">Thrown when the queue is closed and no more items can be added.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the element or priority is null.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the cancellation token is canceled.</exception>
+        /// <exception cref="TimeoutException">Thrown when the timeout expires.</exception>
+        Task EnqueueAsync(TElement element, TPriority priority, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Takes a next element from the queue. If the queue is empty, waits until a new element is inserted to the queue or a cancellation signal is received.
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>TElement from the queue.</returns>
+        /// <exception cref="QueueIsClosedException">Thrown when the queue is closed and no more items can be added.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the cancellation token is canceled.</exception>
+        Task<TElement> DequeueAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Takes a next element from the queue. If the queue is empty, waits until a new element is inserted to the queue or a cancellation signal is received or timeout occurs.
+        /// </summary>
+        /// <param name="millisecondsTimeout">The time after which waiting for the place in the queue will end by throwing an TimeoutException exception.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>TElement from the queue.</returns>
+        /// <exception cref="QueueIsClosedException">Thrown when the queue is closed and no more items can be added.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the cancellation token is canceled.</exception>
+        /// <exception cref="TimeoutException">Thrown when the timeout expires.</exception>
+        Task<TElement> DequeueAsync(int millisecondsTimeout, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Takes a next element from the queue. If the queue is empty, waits until a new element is inserted to the queue or a cancellation signal is received or timeout occurs.
+        /// </summary>
+        /// <param name="timeout">The time after which waiting for the place in the queue will end by throwing an TimeoutException exception.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>TElement from the queue.</returns>
+        /// <exception cref="QueueIsClosedException">Thrown when the queue is closed and no more items can be added.</exception>
+        /// <exception cref="OperationCanceledException">Thrown when the cancellation token is canceled.</exception>
+        /// <exception cref="TimeoutException">Thrown when the timeout expires.</exception>
+        Task<TElement> DequeueAsync(TimeSpan timeout, CancellationToken cancellationToken = default);
     }
 }
