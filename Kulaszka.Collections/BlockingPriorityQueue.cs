@@ -100,13 +100,18 @@ namespace Kulaszka.Collections
         {
             ValidateBeforeEnqueue(element, priority);
 
-            var canEnqueue = await _allowEnqueue.WaitOneAsync(millisecondsTimeout, cancellationToken); ;
-
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (!canEnqueue)
+            try
             {
-                throw new TimeoutException();
+                var canEnqueue = await _allowEnqueue.WaitOneAsync(millisecondsTimeout, cancellationToken);
+
+                if (!canEnqueue)
+                {
+                    throw new TimeoutException();
+                }
+            }
+            catch (TaskCanceledException e)
+            {
+                throw new OperationCanceledException(e.Message, e, cancellationToken);
             }
 
             if (IsAddingCompleted)
@@ -167,15 +172,19 @@ namespace Kulaszka.Collections
 
         public async Task<TElement> DequeueAsync(int millisecondsTimeout, CancellationToken cancellationToken = default)
         {
-            var canDequeue = await _allowDequeue.WaitOneAsync(millisecondsTimeout, cancellationToken);
-
-            cancellationToken.ThrowIfCancellationRequested();
-            
-            if (!canDequeue)
+            try
             {
-                throw new TimeoutException();
+                var canDequeue = await _allowDequeue.WaitOneAsync(millisecondsTimeout, cancellationToken);
+
+                if (!canDequeue)
+                {
+                    throw new TimeoutException();
+                }
             }
-            
+            catch (TaskCanceledException e)
+            {
+                throw new OperationCanceledException(e.Message, e, cancellationToken);
+            }
 
             IList<TPriority> orderedKeys;
             lock (_queues)
@@ -185,6 +194,8 @@ namespace Kulaszka.Collections
 
             foreach (var priority in orderedKeys)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var queue = _queues[priority];
                 if (queue.Count > 0 && queue.TryDequeue(out var element))
                 {
